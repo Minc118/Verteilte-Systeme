@@ -8,23 +8,21 @@ Fill this table during implementation and final testing.
 
 | Item | Value |
 | --- | --- |
-| Operating system | To be recorded |
-| Java version | To be recorded with `java -version` |
+| Operating system | macOS local development machine |
+| Java version | Java 23.0.1 during local verification |
 | Server host | `localhost` for local tests |
-| Server port | To be chosen during implementation and documented in `README.md` |
-| Mail storage directory | To be chosen during implementation and documented in `README.md` |
-| Command used to compile | To be copied from `README.md` |
-| Command used to run | To be copied from `README.md` |
+| Server port | Default `2525`; `2526` was also used for follow-up boundary tests |
+| Mail storage directory | Default `mails` |
+| Command used to compile | `javac -d out $(find src/main/java -name "*.java")` |
+| Command used to run | `java -cp out smtp.SMTPServer 2525 mails` |
 
 ## How to Run the Server
 
-The exact compile and run commands must be added after implementation. The README must be the source of truth.
-
-Expected final pattern:
+The README is the source of truth for compile and run commands. Current commands:
 
 ```sh
-# compile command from README
-# run command from README, including the chosen port
+javac -d out $(find src/main/java -name "*.java")
+java -cp out smtp.SMTPServer 2525 mails
 ```
 
 During final verification, copy commands directly from `README.md` and confirm they work from a clean checkout.
@@ -59,9 +57,9 @@ Notes:
 
 | Run | Command | Expected Result | Actual Result |
 | --- | --- | --- | --- |
-| 1 | `java -jar tools/SMTPClient.jar <host> <port>` | Completes without server error. | To be recorded |
-| 2 | `java -jar tools/SMTPClient.jar <host> <port>` | Completes without server error. | To be recorded |
-| 3 | `java -jar tools/SMTPClient.jar <host> <port>` | Completes without server error. | To be recorded |
+| 1 | `java -jar tools/SMTPClient.jar localhost 2525` | Completes without server error. | Passed locally |
+| 2 | `java -jar tools/SMTPClient.jar localhost 2525` | Completes without server error. | Passed locally, included random `HELP` |
+| 3 | `java -jar tools/SMTPClient.jar localhost 2525` | Completes without server error. | Passed locally |
 
 ## Manual netcat Test
 
@@ -270,3 +268,20 @@ Required valid recipients:
 - TCP byte stream: parsing must recover SMTP lines from bytes.
 - External data representation: SMTP uses US-ASCII.
 - Concurrency: Java NIO Selector handles multiple clients without one thread per client.
+
+
+## Current Local Verification Log
+
+These checks were run after the first implementation pass:
+
+- Compile: `javac -d out $(find src/main/java -name "*.java")` passed.
+- Provided client primary command passed three times: `java -jar tools/SMTPClient.jar localhost 2525`.
+- Provided client alternative command passed once: `java -cp tools/SMTPClient.jar de.tu_berlin.dos.SMTPClient localhost 2525`.
+- Manual 3-recipient test passed: `abc@def.edu` and `ghi@jkl.com` returned `250 OK`; `invalid@example.com` returned `550 No such user here`.
+- `HELP` directly after `DATA` was stored in the message body and did not return `214` while in DATA mode.
+- Bad sequence test passed: `DATA` before a valid transaction returned `503 Bad sequence of commands`.
+- Normal `HELP` test passed with `214`.
+- Split TCP command test passed: `HE` and `LO split.example` sent separately were reconstructed as `HELO split.example`.
+- Multiple-client test passed: two simultaneous socket clients kept independent session state.
+- Source scan found required NIO classes: `Selector`, `ServerSocketChannel`, `SocketChannel`, `SelectionKey`, `ByteBuffer`, `FileChannel`, and `StandardCharsets.US_ASCII`.
+- Source scan found no `Thread`, `Executor`, `InputStream`, `OutputStream`, `Reader`, `Writer`, `FileInputStream`, or `FileOutputStream` in `src/main/java`.

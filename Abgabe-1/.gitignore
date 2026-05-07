@@ -1,0 +1,9 @@
+*.class
+target/
+build/
+out/
+mails/
+local-notes/
+.idea/
+.vscode/
+.DS_Store

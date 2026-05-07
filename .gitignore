@@ -1,8 +1,7 @@
-*.class
+.DS_Store
+out/
 target/
 build/
-out/
-.idea/
-.vscode/
-.DS_Store
+mails/
+local-notes/
 
